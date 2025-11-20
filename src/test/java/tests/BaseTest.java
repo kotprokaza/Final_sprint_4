@@ -4,6 +4,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import io.github.bonigarcia.wdm.WebDriverManager;
 import java.time.Duration;
 
 public class BaseTest {
@@ -11,15 +12,19 @@ public class BaseTest {
     
     @Before
     public void setUp() {
-        // Убедись, что путь к ChromeDriver указан правильно
-        System.setProperty("webdriver.chrome.driver", "/path/to/chromedriver");
+        // WebDriverManager автоматически скачает и настроит ChromeDriver
+        WebDriverManager.chromedriver().setup();
+        
         driver = new ChromeDriver();
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
+        driver.manage().window().maximize();
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
         driver.get("https://qa-scooter.praktikum-services.ru/");
     }
     
     @After
     public void tearDown() {
-        driver.quit();
+        if (driver != null) {
+            driver.quit();
+        }
     }
 }

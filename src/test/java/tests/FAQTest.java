@@ -3,45 +3,48 @@ package tests;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.openqa.selenium.By;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
-import java.time.Duration;
+import pageobject.MainPage;
+import java.util.Arrays;
+import java.util.Collection;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
 public class FAQTest extends BaseTest {
     
-    private final String questionLocator;
-    private final String answerLocator;
+    private final int questionIndex;
     private final String expectedText;
     
-    public FAQTest(String questionLocator, String answerLocator, String expectedText) {
-        this.questionLocator = questionLocator;
-        this.answerLocator = answerLocator;
+    public FAQTest(int questionIndex, String expectedText) {
+        this.questionIndex = questionIndex;
         this.expectedText = expectedText;
     }
     
     @Parameterized.Parameters
-    public static Object[][] getData() {
-        return new Object[][] {
-            {"//div[@id='accordion__heading-0']", "//div[@id='accordion__panel-0']", "Сутки — 400 рублей."},
-            {"//div[@id='accordion__heading-1']", "//div[@id='accordion__panel-1']", "Пока что у нас так:"},
-            // Добавь остальные вопросы по аналогии
-        };
+    public static Collection<Object[]> getData() {
+        return Arrays.asList(new Object[][] {
+            {0, "Сутки — 400 рублей."},
+            {1, "Пока что у нас так:"},
+            {2, "Допустим, вы оформляете заказ на 8 мая."},
+            {3, "Только начиная с завтрашнего дня."},
+            {4, "Пока что нет!"},
+            {5, "Самокат приезжает к вам с полной зарядкой."},
+            {6, "Да, пока самокат не привезли."},
+            {7, "Да, обязательно."}
+        });
     }
     
     @Test
     public void testFAQItem() {
-        // Прокручиваем до раздела FAQ
-        driver.findElement(By.xpath(questionLocator)).click();
+        MainPage mainPage = new MainPage(driver);
         
-        // Ждем появления ответа
-        new WebDriverWait(driver, Duration.ofSeconds(5))
-            .until(ExpectedConditions.visibilityOfElementLocated(By.xpath(answerLocator)));
+        // Принимаем куки
+        mainPage.acceptCookies();
         
-        String actualText = driver.findElement(By.xpath(answerLocator)).getText();
-        assertTrue("Текст ответа не содержит ожидаемую строку", 
-                   actualText.contains(expectedText));
+        // Кликаем на вопрос и проверяем ответ через Page Object
+        mainPage.clickFaqQuestion(questionIndex);
+        String answerText = mainPage.getFaqAnswerText(questionIndex);
+        
+        assertTrue("Ответ не содержит ожидаемый текст: " + expectedText, 
+                   answerText.contains(expectedText));
     }
 }
