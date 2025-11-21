@@ -9,7 +9,7 @@ import java.time.Duration;
 public class OrderPage {
     private WebDriver driver;
     
-    // Поля первой страницы заказа
+    // Локаторы первой страницы заказа
     private By nameField = By.xpath(".//input[@placeholder='* Имя']");
     private By lastNameField = By.xpath(".//input[@placeholder='* Фамилия']");
     private By addressField = By.xpath(".//input[@placeholder='* Адрес: куда привезти заказ']");
@@ -17,7 +17,7 @@ public class OrderPage {
     private By phoneField = By.xpath(".//input[@placeholder='* Телефон: на него позвонит курьер']");
     private By nextButton = By.xpath(".//button[text()='Далее']");
     
-    // Поля второй страницы заказа
+    // Локаторы второй страницы заказа
     private By dateField = By.xpath(".//input[@placeholder='* Когда привезти самокат']");
     private By rentalPeriodField = By.className("Dropdown-placeholder");
     private By colorBlackCheckbox = By.id("black");
@@ -39,7 +39,7 @@ public class OrderPage {
         
         // Выбор станции метро
         driver.findElement(metroField).click();
-        driver.findElement(By.xpath(".//button[@value='1']")).click(); // Первая станция
+        driver.findElement(By.xpath(".//button[@value='1']")).click();
     }
     
     public void clickNextButton() {
@@ -47,10 +47,17 @@ public class OrderPage {
     }
     
     public void fillSecondPage(String date, String comment) {
+        // Заполняем дату
         driver.findElement(dateField).sendKeys(date);
+        
+        // Выбираем период аренды
         driver.findElement(rentalPeriodField).click();
         driver.findElement(By.xpath(".//div[text()='сутки']")).click();
+        
+        // Выбираем цвет
         driver.findElement(colorBlackCheckbox).click();
+        
+        // Заполняем комментарий
         driver.findElement(commentField).sendKeys(comment);
     }
     
@@ -59,11 +66,13 @@ public class OrderPage {
     }
     
     public void confirmOrder() {
+        new WebDriverWait(driver, Duration.ofSeconds(5))
+            .until(ExpectedConditions.elementToBeClickable(confirmOrderButton));
         driver.findElement(confirmOrderButton).click();
     }
     
     public boolean isSuccessMessageDisplayed() {
-        new WebDriverWait(driver, Duration.ofSeconds(5))
+        new WebDriverWait(driver, Duration.ofSeconds(10))
             .until(ExpectedConditions.visibilityOfElementLocated(successMessage));
         return driver.findElement(successMessage).isDisplayed();
     }

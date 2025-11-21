@@ -31,11 +31,11 @@ public class OrderTest extends BaseTest {
         this.comment = comment;
     }
     
-    @Parameterized.Parameters
+    @Parameterized.Parameters(name = "Заказ через {0} кнопку: {1} {2}")
     public static Collection<Object[]> getData() {
         return Arrays.asList(new Object[][] {
-            {"top", "Иван", "Иванов", "Москва, ул. Ленина, 1", "+79991234567", "25.12.2024", "Тестовый заказ 1"},
-            {"bottom", "Петр", "Петров", "Санкт-Петербург, Невский пр., 100", "+79997654321", "26.12.2024", "Тестовый заказ 2"}
+            {"верхнюю", "Иван", "Иванов", "Москва, ул. Ленина, 1", "+79991234567", "25.12.2024", "Позвонить за час"},
+            {"нижнюю", "Петр", "Петров", "Санкт-Петербург, Невский пр., 100", "+79997654321", "26.12.2024", "Не звонить"}
         });
     }
     
@@ -48,10 +48,9 @@ public class OrderTest extends BaseTest {
         mainPage.acceptCookies();
         
         // Нажимаем на кнопку заказа в зависимости от типа
-        if ("top".equals(orderButtonType)) {
+        if ("верхнюю".equals(orderButtonType)) {
             mainPage.clickOrderButtonTop();
         } else {
-            // Прокручиваем до нижней кнопки и кликаем
             mainPage.clickOrderButtonBottom();
         }
         
