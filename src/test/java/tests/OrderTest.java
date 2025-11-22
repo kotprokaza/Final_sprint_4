@@ -68,7 +68,6 @@ public class OrderTest extends BaseTest {
 
     @Test
     public void testOrder() {
-        // Устанавливаем системное свойство для текущего теста
         System.setProperty("browser", browser);
 
         MainPage mainPage = new MainPage(driver);
@@ -77,6 +76,16 @@ public class OrderTest extends BaseTest {
         mainPage.open();
 
         boolean useTopButton = "upper".equals(buttonPosition);
+
+        // Для Firefox используем дополнительное ожидание
+        if ("firefox".equals(browser)) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
         mainPage.clickOrderButton(useTopButton);
 
         orderPage.fillFirstStep(firstName, lastName, address, metroStation, phone);

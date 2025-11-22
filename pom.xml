@@ -79,9 +79,6 @@
                             <systemPropertyVariables>
                                 <browser>chrome</browser>
                             </systemPropertyVariables>
-                            <includes>
-                                <include>**/OrderTest.java</include>
-                            </includes>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -100,20 +97,10 @@
                             <systemPropertyVariables>
                                 <browser>firefox</browser>
                             </systemPropertyVariables>
-                            <includes>
-                                <include>**/OrderTest.java</include>
-                            </includes>
                         </configuration>
                     </plugin>
                 </plugins>
             </build>
-        </profile>
-        
-        <profile>
-            <id>all-browsers</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
         </profile>
     </profiles>
 </project>
