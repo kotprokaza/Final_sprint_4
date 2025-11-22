@@ -5,65 +5,84 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import pageobject.MainPage;
 import pageobject.OrderPage;
+import static org.junit.Assert.assertTrue;
 import java.util.Arrays;
 import java.util.Collection;
-import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
 public class OrderTest extends BaseTest {
-    
-    private final String orderButtonType;
-    private final String name;
+
+    private final String browser;
+    private final String buttonPosition;
+    private final String firstName;
     private final String lastName;
     private final String address;
+    private final String metroStation;
     private final String phone;
     private final String date;
+    private final String rentalPeriod;
+    private final String color;
     private final String comment;
-    
-    public OrderTest(String orderButtonType, String name, String lastName, 
-                    String address, String phone, String date, String comment) {
-        this.orderButtonType = orderButtonType;
-        this.name = name;
+
+    public OrderTest(String browser, String buttonPosition, String firstName, String lastName,
+                     String address, String metroStation, String phone,
+                     String date, String rentalPeriod, String color, String comment) {
+        this.browser = browser;
+        this.buttonPosition = buttonPosition;
+        this.firstName = firstName;
         this.lastName = lastName;
         this.address = address;
+        this.metroStation = metroStation;
         this.phone = phone;
         this.date = date;
+        this.rentalPeriod = rentalPeriod;
+        this.color = color;
         this.comment = comment;
     }
-    
-    @Parameterized.Parameters(name = "Заказ через {0} кнопку: {1} {2}")
-    public static Collection<Object[]> getData() {
-        return Arrays.asList(new Object[][] {
-            {"верхнюю", "Иван", "Иванов", "Москва, ул. Ленина, 1", "+79991234567", "25.12.2024", "Позвонить за час"},
-            {"нижнюю", "Петр", "Петров", "Санкт-Петербург, Невский пр., 100", "+79997654321", "26.12.2024", "Не звонить"}
+
+    @Parameterized.Parameters
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][]{
+                {
+                        "chrome", "upper",
+                        "Дима", "Иванов", "ул. Потапова Д 1", "Черкизовская", "81234567899",
+                        "28.10.2025", "двое суток", "серая безысходность", "доставить вместе со шлемом"
+                },
+                {
+                        "chrome", "down",
+                        "Вася", "Васильев", "пр-т Анкина Д 12", "Черкизовская", "89876543211",
+                        "28.10.2025", "двое суток", "серая безысходность", "доставить вместе со шлемом"
+                },
+                {
+                        "firefox", "upper",
+                        "Дима", "Иванов", "ул. Потапова Д 1", "Черкизовская", "81234567899",
+                        "28.10.2025", "двое суток", "серая безысходность", "доставить вместе со шлемом"
+                },
+                {
+                        "firefox", "down",
+                        "Вася", "Васильев", "пр-т Анкина Д 12", "Черкизовская", "89876543211",
+                        "28.10.2025", "двое суток", "серая безысходность", "доставить вместе со шлемом"
+                }
         });
     }
-    
+
     @Test
-    public void testOrderScooter() {
+    public void testOrder() {
+        // Устанавливаем системное свойство для текущего теста
+        System.setProperty("browser", browser);
+
         MainPage mainPage = new MainPage(driver);
         OrderPage orderPage = new OrderPage(driver);
-        
-        // Принимаем куки
-        mainPage.acceptCookies();
-        
-        // Нажимаем на кнопку заказа в зависимости от типа
-        if ("верхнюю".equals(orderButtonType)) {
-            mainPage.clickOrderButtonTop();
-        } else {
-            mainPage.clickOrderButtonBottom();
-        }
-        
-        // Заполняем первую страницу заказа
-        orderPage.fillFirstPage(name, lastName, address, phone);
-        orderPage.clickNextButton();
-        
-        // Заполняем вторую страницу заказа
-        orderPage.fillSecondPage(date, comment);
-        orderPage.clickOrderButton();
+
+        mainPage.open();
+
+        boolean useTopButton = "upper".equals(buttonPosition);
+        mainPage.clickOrderButton(useTopButton);
+
+        orderPage.fillFirstStep(firstName, lastName, address, metroStation, phone);
+        orderPage.fillSecondStep(date, rentalPeriod, color, comment);
         orderPage.confirmOrder();
-        
-        // Проверяем успешное оформление заказа
-        assertTrue("Заказ не был оформлен успешно", orderPage.isSuccessMessageDisplayed());
+
+        assertTrue("Заказ не был оформлен успешно в " + browser, orderPage.isSuccessMessageDisplayed());
     }
 }

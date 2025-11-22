@@ -1,109 +1,153 @@
 package pageobject;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import java.time.Duration;
 
 public class OrderPage {
-    private WebDriver driver;
-    private JavascriptExecutor js;
-    
-    // Локаторы первой страницы заказа
-    private By nameField = By.xpath(".//input[@placeholder='* Имя']");
-    private By lastNameField = By.xpath(".//input[@placeholder='* Фамилия']");
-    private By addressField = By.xpath(".//input[@placeholder='* Адрес: куда привезти заказ']");
-    private By metroField = By.xpath(".//input[@placeholder='* Станция метро']");
-    private By phoneField = By.xpath(".//input[@placeholder='* Телефон: на него позвонит курьер']");
-    private By nextButton = By.xpath(".//button[text()='Далее']");
-    
-    // Локаторы второй страницы заказа
-    private By dateField = By.xpath(".//input[@placeholder='* Когда привезти самокат']");
-    private By rentalPeriodField = By.className("Dropdown-placeholder");
-    private By colorBlackCheckbox = By.id("black");
-    private By commentField = By.xpath(".//input[@placeholder='Комментарий для курьера']");
-    private By orderButton = By.xpath(".//button[text()='Заказать']");
-    private By confirmOrderButton = By.xpath(".//button[text()='Да']");
-    private By successMessage = By.xpath(".//div[contains(@class, 'Order_ModalHeader')]");
+    private final WebDriver driver;
+    private final WebDriverWait wait;
     
     public OrderPage(WebDriver driver) {
         this.driver = driver;
-        this.js = (JavascriptExecutor) driver;
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
     }
     
-    public void fillFirstPage(String name, String lastName, String address, String phone) {
-        driver.findElement(nameField).sendKeys(name);
-        driver.findElement(lastNameField).sendKeys(lastName);
-        driver.findElement(addressField).sendKeys(address);
-        driver.findElement(phoneField).sendKeys(phone);
+    public void fillFirstStep(String firstName, String lastName, String address, String metroStation, String phone) {
+        // Заполнение имени
+        WebElement nameField = wait.until(ExpectedConditions.visibilityOfElementLocated(
+            By.xpath("//input[@placeholder='* Имя']")));
+        nameField.sendKeys(firstName);
         
-        // Выбор станции метро
-        selectMetroStation("Сокольники");
+        // Заполнение фамилии
+        driver.findElement(By.xpath("//input[@placeholder='* Фамилия']")).sendKeys(lastName);
         
-        // Закрываем выпадающий список метро, кликая на другое поле
-        driver.findElement(nameField).click();
+        // Заполнение адреса
+        driver.findElement(By.xpath("//input[@placeholder='* Адрес: куда привезти заказ']")).sendKeys(address);
+        
+        // ВЫБОР СТАНЦИИ МЕТРО
+        WebElement metroField = driver.findElement(By.xpath("//input[@placeholder='* Станция метро']"));
+        metroField.click();
+        
+        WebElement stationOption = wait.until(ExpectedConditions.elementToBeClickable(
+            By.xpath("//div[@class='select-search__select']//button[.//div[text()='Черкизовская']]")));
+        stationOption.click();
+        
+        // Заполнение телефона
+        driver.findElement(By.xpath("//input[@placeholder='* Телефон: на него позвонит курьер']")).sendKeys(phone);
+        
+        // Нажатие кнопки Далее
+        driver.findElement(By.xpath("//button[text()='Далее']")).click();
     }
     
-    private void selectMetroStation(String stationName) {
-        // Кликаем на поле выбора метро
-        driver.findElement(metroField).click();
+    public void fillSecondStep(String date, String rentalPeriod, String color, String comment) {
+        // Ждем загрузки второй страницы
+        wait.until(ExpectedConditions.visibilityOfElementLocated(
+            By.xpath("//input[@placeholder='* Когда привезти самокат']")));
         
-        // Ждем появления списка станций
-        new WebDriverWait(driver, Duration.ofSeconds(5))
-            .until(ExpectedConditions.visibilityOfElementLocated(By.className("select-search__select")));
+        // ПРОСТОЙ ВЫБОР ДАТЫ
+        WebElement dateField = driver.findElement(By.xpath("//input[@placeholder='* Когда привезти самокат']"));
+        dateField.sendKeys(date);
+        dateField.sendKeys(Keys.ENTER);
         
-        // Выбираем станцию по имени
-        WebElement stationElement = driver.findElement(By.xpath(String.format("//div[contains(text(), '%s')]", stationName)));
-        js.executeScript("arguments[0].click();", stationElement);
-    }
-    
-    public void clickNextButton() {
-        // Используем JavaScript для клика, чтобы обойти перекрытие
-        WebElement nextButtonElement = driver.findElement(nextButton);
-        js.executeScript("arguments[0].click();", nextButtonElement);
-    }
-    
-    public void fillSecondPage(String date, String comment) {
-        // Заполняем дату
-        WebElement dateElement = driver.findElement(dateField);
-        dateElement.clear();
-        dateElement.sendKeys(date);
+        // Выбор срока аренды
+        driver.findElement(By.className("Dropdown-placeholder")).click();
+        WebElement period = wait.until(ExpectedConditions.elementToBeClickable(
+            By.xpath("//div[text()='" + rentalPeriod + "']")));
+        period.click();
         
-        // Закрываем календарь, кликая на другое поле
-        driver.findElement(rentalPeriodField).click();
+        // ВЫБОР ЦВЕТА
+        if ("серая безысходность".equals(color)) {
+            driver.findElement(By.id("grey")).click();
+        } else if ("чёрный жемчуг".equals(color)) {
+            driver.findElement(By.id("black")).click();
+        }
         
-        // Выбираем период аренды
-        WebElement rentalPeriodElement = driver.findElement(rentalPeriodField);
-        js.executeScript("arguments[0].click();", rentalPeriodElement);
+        // Комментарий
+        driver.findElement(By.xpath("//input[@placeholder='Комментарий для курьера']")).sendKeys(comment);
         
-        WebElement periodOption = driver.findElement(By.xpath(".//div[text()='сутки']"));
-        js.executeScript("arguments[0].click();", periodOption);
-        
-        // Выбираем цвет
-        driver.findElement(colorBlackCheckbox).click();
-        
-        // Заполняем комментарий
-        driver.findElement(commentField).sendKeys(comment);
-    }
-    
-    public void clickOrderButton() {
-        WebElement orderButtonElement = driver.findElement(orderButton);
-        js.executeScript("arguments[0].click();", orderButtonElement);
+        // Нажатие кнопки Заказать
+        driver.findElement(By.xpath("//button[contains(@class, 'Button_Middle') and text()='Заказать']")).click();
     }
     
     public void confirmOrder() {
-        new WebDriverWait(driver, Duration.ofSeconds(5))
-            .until(ExpectedConditions.elementToBeClickable(confirmOrderButton));
-        WebElement confirmButtonElement = driver.findElement(confirmOrderButton);
-        js.executeScript("arguments[0].click();", confirmButtonElement);
+        try {
+            System.out.println("Ожидание появления модального окна подтверждения...");
+            
+            // ПЕРВЫЙ ПРИОРИТЕТ: предложенный локатор
+            WebElement confirmButton = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//div[contains(@class,'Order_Buttons')]//button[text()='Да']")));
+            
+            System.out.println("Кнопка 'Да' найдена по локатору с Order_Buttons, нажимаем...");
+            confirmButton.click();
+            
+        } catch (Exception e) {
+            System.out.println("Первый локатор не сработал: " + e.getMessage());
+            
+            // ВТОРОЙ ПРИОРИТЕТ: альтернативный локатор
+            try {
+                WebElement confirmButton = wait.until(ExpectedConditions.elementToBeClickable(
+                    By.xpath("//button[text()='Да']")));
+                
+                System.out.println("Кнопка 'Да' найдена по простому локатору, нажимаем...");
+                confirmButton.click();
+                
+            } catch (Exception ex) {
+                System.out.println("Второй локатор тоже не сработал: " + ex.getMessage());
+                
+                // ТРЕТИЙ ПРИОРИТЕТ: локатор с модальным окном
+                try {
+                    WebElement confirmButton = wait.until(ExpectedConditions.elementToBeClickable(
+                        By.xpath("//div[contains(@class, 'Order_Modal')]//button[text()='Да']")));
+                    
+                    System.out.println("Кнопка 'Да' найдена по локатору с Order_Modal, нажимаем...");
+                    confirmButton.click();
+                    
+                } catch (Exception exc) {
+                    System.out.println("Все локаторы не сработали: " + exc.getMessage());
+                }
+            }
+        }
+        
+        // Даем время для обработки
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
     
     public boolean isSuccessMessageDisplayed() {
-        new WebDriverWait(driver, Duration.ofSeconds(10))
-            .until(ExpectedConditions.visibilityOfElementLocated(successMessage));
-        return driver.findElement(successMessage).isDisplayed();
+        try {
+            System.out.println("Проверка сообщения об успешном оформлении заказа...");
+            
+            // Ждем появления сообщения об успешном оформлении
+            WebElement successMessage = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//div[contains(text(), 'Заказ оформлен')]")));
+            
+            System.out.println("Сообщение об успешном оформлении найдено: " + successMessage.getText());
+            return successMessage.isDisplayed();
+            
+        } catch (Exception e) {
+            System.out.println("Сообщение об успешном оформлении не найдено: " + e.getMessage());
+            
+            // Попробуем альтернативные локаторы
+            try {
+                WebElement altSuccessMessage = driver.findElement(By.xpath("//div[contains(@class, 'Order_ModalHeader')]"));
+                if (altSuccessMessage.getText().contains("Заказ оформлен")) {
+                    System.out.println("Альтернативное сообщение найдено: " + altSuccessMessage.getText());
+                    return true;
+                }
+            } catch (Exception ex) {
+                System.out.println("Альтернативный локатор тоже не сработал: " + ex.getMessage());
+            }
+            
+            return false;
+        }
     }
 }

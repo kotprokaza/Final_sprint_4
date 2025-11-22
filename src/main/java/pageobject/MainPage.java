@@ -2,58 +2,51 @@ package pageobject;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import java.time.Duration;
 
 public class MainPage {
-    private WebDriver driver;
+    private final WebDriver driver;
+    private final WebDriverWait wait;
     
-    // Локатор для кнопки "Заказать" вверху страницы
-    private By orderButtonTop = By.className("Button_Button__ra12g");
-    
-    // Локатор для кнопки "Заказать" внизу страницы
-    private By orderButtonBottom = By.xpath("//div[contains(@class, 'Home_FinishButton')]/button");
-    
-    // Локатор для cookie кнопки
-    private By cookieButton = By.id("rcc-confirm-button");
-    
-    // Локаторы для FAQ
-    private By faqSection = By.className("Home_FAQ__3uVm4");
-    private By faqQuestion = By.xpath("//div[@data-accordion-component='AccordionItemButton']");
-    private By faqAnswer = By.xpath("//div[@data-accordion-component='AccordionItemPanel']");
+    // Локаторы
+    private final By topOrderButton = By.className("Button_Button__ra12g");
+    private final By bottomOrderButton = By.xpath("//button[@class='Button_Button__ra12g Button_Middle__1CSJM' and text()='Заказать']");
     
     public MainPage(WebDriver driver) {
         this.driver = driver;
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
     }
     
-    public void clickOrderButtonTop() {
-        driver.findElement(orderButtonTop).click();
+    public void open() {
+        driver.get("https://qa-scooter.praktikum-services.ru/");
     }
     
-    public void clickOrderButtonBottom() {
-        driver.findElement(orderButtonBottom).click();
-    }
-    
-    public void acceptCookies() {
-        driver.findElement(cookieButton).click();
+    public void clickOrderButton(boolean topButton) {
+        if (topButton) {
+            driver.findElement(topOrderButton).click();
+        } else {
+            WebElement element = driver.findElement(bottomOrderButton);
+            ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView();", element);
+            element.click();
+        }
     }
     
     public void clickFaqQuestion(int index) {
-        // Прокручиваем до раздела FAQ
-        new WebDriverWait(driver, Duration.ofSeconds(5))
-            .until(ExpectedConditions.visibilityOfElementLocated(faqSection));
+        // Скроллим к вопросу
+        WebElement question = driver.findElement(By.id("accordion__heading-" + index));
+        ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView();", question);
         
-        // Кликаем на вопрос по индексу
-        driver.findElements(faqQuestion).get(index).click();
+        // Кликаем на вопрос
+        question.click();
     }
     
-    public String getFaqAnswerText(int index) {
-        // Ждем появления ответа и возвращаем текст
-        new WebDriverWait(driver, Duration.ofSeconds(5))
-            .until(ExpectedConditions.visibilityOfElementLocated(
-                By.id("accordion__panel-" + index)
-            ));
-        return driver.findElement(By.id("accordion__panel-" + index)).getText();
+    public String getFaqAnswer(int index) {
+        // Ждем появления ответа и получаем полный текст
+        WebElement answer = wait.until(ExpectedConditions.visibilityOfElementLocated(
+            By.id("accordion__panel-" + index)));
+        return answer.getText();
     }
 }
